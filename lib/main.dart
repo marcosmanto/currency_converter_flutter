@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:currency_converter_flutter/keys/api_keys.dart';
+import 'package:currency_converter_flutter/utils/clear_focus.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
           focusedBorder:
               OutlineInputBorder(borderSide: BorderSide(color: Colors.amber)),
           hintStyle: TextStyle(color: Colors.amber),
+          labelStyle: TextStyle(fontSize: 20),
         ),
       ),
       home: Home(),
@@ -64,72 +66,106 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text(
-          '💵 Conversor 💵',
-          style: TextStyle(color: Colors.black),
+    return ClearFocus(
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          centerTitle: true,
+          title: const Text(
+            '💵 Conversor 💵',
+            style: TextStyle(color: Colors.black),
+          ),
+          backgroundColor: Colors.amber,
         ),
-        backgroundColor: Colors.amber,
-      ),
-      body: FutureBuilder<Map>(
-        future: getData(),
-        builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.none:
-            case ConnectionState.waiting:
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(
-                      color: Colors.amber,
-                    ),
-                    SizedBox(height: 10),
-                    Text('Carregando...',
-                        style: TextStyle(
-                          color: Colors.amber,
-                          fontSize: 14,
-                        ))
-                  ],
-                ),
-              );
-            default:
-              if (snapshot.hasError) {
+        body: FutureBuilder<Map>(
+          future: getData(),
+          builder: (context, snapshot) {
+            switch (snapshot.connectionState) {
+              case ConnectionState.none:
+              case ConnectionState.waiting:
                 return Center(
-                  child: Text(
-                    'Erro ao carregar os dados.',
-                    style: TextStyle(
-                      color: Colors.red[400],
-                      fontSize: 14,
-                    ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(
+                        color: Colors.amber,
+                      ),
+                      SizedBox(height: 10),
+                      Text('Carregando...',
+                          style: TextStyle(
+                            color: Colors.amber,
+                            fontSize: 14,
+                          ))
+                    ],
                   ),
                 );
-              } else {
-                dolar = snapshot.data!['results']['currencies']['USD']['buy'];
-                dolar = snapshot.data!['results']['currencies']['EUR']['buy'];
-                return SingleChildScrollView(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Icon(
-                          Icons.monetization_on,
-                          size: 150,
-                          color: Colors.amber,
-                        ),
-                        TextField(
-                          decoration: InputDecoration(
-                            labelText: 'Reais',
+              default:
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      'Erro ao carregar os dados.',
+                      style: TextStyle(
+                        color: Colors.red[400],
+                        fontSize: 14,
+                      ),
+                    ),
+                  );
+                } else {
+                  dolar = snapshot.data!['results']['currencies']['USD']['buy'];
+                  dolar = snapshot.data!['results']['currencies']['EUR']['buy'];
+                  return SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Icon(
+                            Icons.monetization_on,
+                            size: 150,
+                            color: Colors.amber,
                           ),
-                        )
-                      ]),
-                );
-              }
-          }
-        },
+                          Divider(),
+                          TextField(
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: 'Reais',
+                              prefixText: 'R\$ ',
+                            ),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                            ),
+                          ),
+                          Divider(),
+                          TextField(
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: 'Dólares',
+                              prefixText: 'US\$ ',
+                            ),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                            ),
+                          ),
+                          Divider(),
+                          TextField(
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: 'Euros',
+                              prefixText: '€\$ ',
+                            ),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                            ),
+                          ),
+                        ]),
+                  );
+                }
+            }
+          },
+        ),
       ),
     );
   }
