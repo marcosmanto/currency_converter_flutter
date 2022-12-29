@@ -5,17 +5,26 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 void main() async {
+  //print(await getData());
+  runApp(MyApp());
+}
+
+class ResponseServerError implements Exception {
+  String errMsg() => 'A server error was returned.';
+}
+
+Future<Map>? getData() async {
+  final http.Response response;
   try {
-    //Uri.https('api.hgbrasil.com', 'finance', {'format': 'json', 'key': ''})
-    http.Response response = await http.get(
-        Uri.parse(HgBrasilApi.baseUri.value),
+    response = await http.get(Uri.parse(HgBrasilApi.baseUri.value),
         headers: {'format': 'json', 'key': HgBrasilApi.key.value});
-    print(json.decode(response.body)['results']['currencies']['USD']);
   } catch (e) {
     print('Exception: ${e.toString()}');
+    return {};
   }
-
-  runApp(MyApp());
+  if (response.statusCode >= 400) return throw ResponseServerError();
+  await Future.delayed(Duration(seconds: 10));
+  return json.decode(response.body);
 }
 
 class MyApp extends StatelessWidget {
@@ -24,16 +33,78 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text(
-            'Hello',
-            style: TextStyle(
-              color: Colors.red,
-              fontSize: 42,
-            ),
-          ),
+      home: Home(),
+    );
+  }
+}
+
+class Home extends StatefulWidget {
+  const Home({super.key});
+
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text(
+          '💵 Conversor 💵',
+          style: TextStyle(color: Colors.black),
         ),
+        backgroundColor: Colors.amber,
+      ),
+      body: FutureBuilder<Map>(
+        future: getData(),
+        builder: (context, snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.none:
+            case ConnectionState.waiting:
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(
+                      color: Colors.amber,
+                    ),
+                    SizedBox(height: 10),
+                    Text('Carregando...',
+                        style: TextStyle(
+                          color: Colors.amber,
+                          fontSize: 14,
+                        ))
+                  ],
+                ),
+              );
+            default:
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text(
+                    'Erro ao carregar os dados.',
+                    style: TextStyle(
+                      color: Colors.red[400],
+                      fontSize: 14,
+                    ),
+                  ),
+                );
+              } else {
+                return Center(
+                  child: Text(
+                    'Carregado',
+                    style: TextStyle(
+                      color: Colors.amber,
+                      fontSize: 14,
+                    ),
+                  ),
+                );
+              }
+          }
+        },
       ),
     );
   }
