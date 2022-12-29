@@ -16,14 +16,15 @@ class ResponseServerError implements Exception {
 Future<Map>? getData() async {
   final http.Response response;
   try {
-    response = await http.get(Uri.parse(HgBrasilApi.baseUri.value),
-        headers: {'format': 'json', 'key': HgBrasilApi.key.value});
+    response = await http.get(
+        Uri.parse('${HgBrasilApi.baseUri.value}?key=${HgBrasilApi.key.value}'));
   } catch (e) {
     print('Exception: ${e.toString()}');
-    return {};
+    throw ResponseServerError();
   }
-  if (response.statusCode >= 400) return throw ResponseServerError();
-  await Future.delayed(Duration(seconds: 10));
+  print(response.body);
+  if (response.statusCode >= 400) throw ResponseServerError();
+  //await Future.delayed(Duration(seconds: 5));
   return json.decode(response.body);
 }
 
@@ -33,6 +34,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        hintColor: Colors.amber,
+        primaryColor: Colors.white,
+        inputDecorationTheme: InputDecorationTheme(
+          floatingLabelStyle: TextStyle(color: Colors.amber),
+          enabledBorder:
+              OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+          focusedBorder:
+              OutlineInputBorder(borderSide: BorderSide(color: Colors.amber)),
+          hintStyle: TextStyle(color: Colors.amber),
+        ),
+      ),
       home: Home(),
     );
   }
@@ -46,6 +59,9 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  double? dolar;
+  double? euro;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -93,14 +109,23 @@ class _HomeState extends State<Home> {
                   ),
                 );
               } else {
-                return Center(
-                  child: Text(
-                    'Carregado',
-                    style: TextStyle(
-                      color: Colors.amber,
-                      fontSize: 14,
-                    ),
-                  ),
+                dolar = snapshot.data!['results']['currencies']['USD']['buy'];
+                dolar = snapshot.data!['results']['currencies']['EUR']['buy'];
+                return SingleChildScrollView(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Icon(
+                          Icons.monetization_on,
+                          size: 150,
+                          color: Colors.amber,
+                        ),
+                        TextField(
+                          decoration: InputDecoration(
+                            labelText: 'Reais',
+                          ),
+                        )
+                      ]),
                 );
               }
           }
